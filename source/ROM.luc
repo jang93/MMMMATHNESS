@@ -1,0 +1,60 @@
+module rom (
+    input address[4],  // ROM address
+    output options[20],   // ROM output
+    output goal[8]
+  ) {
+ 
+  sig options_decimal[5][4];
+
+  always {
+  case(address){
+      0:
+        options_decimal = {4d13,4d13,4d13,4d13,4d13};
+        options = 0;
+        goal = 0;
+        
+      1: 
+        options_decimal = {4d2,4d3,4d3,4d6,4d13};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal =8d15;
+      2:
+        options_decimal = {4d1,4d2,4d4,4d9,4d13};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 11;
+      3: 
+        options_decimal = {4d1,4d3,4d6,4d8,4d13};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 11;
+      4: 
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;
+      5: 
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;    
+      6: 
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;      
+      7: 
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;
+      8: 
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;    
+      9: 
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;                          
+      default:
+        options_decimal = {4d0,4d1,4d2,4d3,4d4};
+        options = c{options_decimal[4],options_decimal[3],options_decimal[2],options_decimal[1],options_decimal[0]};
+        goal = 1;       
+  }
+
+
+  }
+}

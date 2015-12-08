@@ -1,0 +1,30 @@
+module adder (
+    input alufn[6],
+    input a[8],  
+    input b[8],  
+    output sum1[8],
+    output z,
+    output v,
+    output n
+  ) {
+sig sum[9]; //9-bit output
+  
+  
+  always {
+    
+    case(alufn[1:0]){ //alufn value controlling add or subtract operator
+    00:
+      sum = a+b; //addition
+    01:
+      sum = a-b; //subtraction
+    10:
+      sum = a*b; // multiplication
+    default:
+      sum = a*b;
+  }
+    sum1 = sum[7:0]; //resultant sum
+    v = (a[7] & ~b[7] & (~sum[7])) | ((~a[7])&(b[7])&sum[7]);
+    n = sum[7];
+    z = ~|sum;
+}
+}

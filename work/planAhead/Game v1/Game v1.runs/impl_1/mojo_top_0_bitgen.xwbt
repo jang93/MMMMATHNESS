@@ -1,0 +1,8 @@
+INTSTYLE=pa
+INFILE=E:\MojoIDE\mojo\Game v1\work\planAhead\Game v1\Game v1.runs\impl_1\mojo_top_0_routed.ncd
+OUTFILE=E:\MojoIDE\mojo\Game v1\work\planAhead\Game v1\Game v1.runs\impl_1\mojo_top_0.bit
+FAMILY=Spartan6
+PART=xc6slx9-2tqg144
+WORKINGDIR=E:\MojoIDE\mojo\Game v1\work\planAhead\Game v1\Game v1.runs\impl_1
+LICENSE=WebPack
+USER_INFO=211100002_0_0_259
