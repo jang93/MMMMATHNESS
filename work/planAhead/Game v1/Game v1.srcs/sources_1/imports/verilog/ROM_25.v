@@ -23,14 +23,14 @@ module rom_25 (
         goal = 1'h0;
       end
       1'h1: begin
-        options_decimal = 20'h2336d;
+        options_decimal = 20'h1336d;
         options = {options_decimal[16+3-:4], options_decimal[12+3-:4], options_decimal[8+3-:4], options_decimal[4+3-:4], options_decimal[0+3-:4]};
-        goal = 8'h0f;
+        goal = 8'h12;
       end
       2'h2: begin
         options_decimal = 20'h1249d;
         options = {options_decimal[16+3-:4], options_decimal[12+3-:4], options_decimal[8+3-:4], options_decimal[4+3-:4], options_decimal[0+3-:4]};
-        goal = 4'hb;
+        goal = 3'h4;
       end
       2'h3: begin
         options_decimal = 20'h1368d;
@@ -38,7 +38,7 @@ module rom_25 (
         goal = 4'hb;
       end
       3'h4: begin
-        options_decimal = 20'h01234;
+        options_decimal = 20'h41234;
         options = {options_decimal[16+3-:4], options_decimal[12+3-:4], options_decimal[8+3-:4], options_decimal[4+3-:4], options_decimal[0+3-:4]};
         goal = 1'h1;
       end

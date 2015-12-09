@@ -1,7 +1,6 @@
 module mojo_top (
     input clk,              // 50MHz clock
     input rst_n,            // reset button (active low)
-    //output led [8],         // 8 user controllable LEDs
     input cclk,             // configuration clock, AVR ready when high
     output spi_miso,        // AVR SPI MISO
     input spi_ss,           // AVR SPI Slave Select
@@ -11,15 +10,14 @@ module mojo_top (
     input avr_tx,           // AVR TX (FPGA RX)
     output avr_rx,          // AVR RX (FPGA TX)
     input avr_rx_busy,     // AVR RX buffer full
-    output led_seg_options [8], // 7-segment LEDs for options
+    output led_seg_options [8], // 4 x 7-segment LEDs for options
     output led_sel_options [4],  // Digit select for options
     output led_seg_options1 [8], // 7-segment LED for options (last number)
-    output led_seg_goal [8], // 7-segment LEDs for goal
+    output led_seg_goal [8], // 4 x 7-segment LEDs for goal
     output led_sel_goal [4],  // Digit select for goal
-    output led_seg_output [8], // 7-segment LEDs for output
+    output led_seg_output [8], // 4 x 7-segment LEDs for output
     output led_sel_output [4],  // Digit select for output
     output led_seg_input [8], // 7-segment LED for input
-    output led_seg_input_power,
     input button_operator[5], //5 buttons for operation selection
     input button_number[5], //5 buttons for selecting number from options
     input button_restart // restart button
@@ -31,6 +29,8 @@ module mojo_top (
     // The reset conditioner is used to synchronize the reset signal to the FPGA
     // clock. This ensures the entire FPGA comes out of reset at the same time.
     reset_conditioner reset_cond;
+    
+    //Defining edge detectors & button conditioners for all buttons
    edge_detector edge_detector_restart (#RISE(1), #FALL(0));
     button_conditioner button_cond_restart;
     edge_detector edge_detector_operator0 (#RISE(1), #FALL(0));
@@ -55,12 +55,12 @@ module mojo_top (
     button_conditioner button_cond_number4;
 
     .rst(rst) {
-    dff goal[8]; // saves goal
-    dff level[3]; // saves level
-    dff options_temp[20]; //saves temp options
-    dff options[20]; //saves options
-    dff number_input[4]; // saves input number_input
-    dff number_output[8]; //saves output
+    dff goal[8]; //goal
+    dff level[3]; //level
+    dff options_temp[20]; //temp options
+    dff options[20]; //options
+    dff number_input[4]; //input
+    dff number_output[8]; //output
       
     counter ctr (#SIZE(3), #DIV(16));//counter to light up led segments 
 
@@ -70,40 +70,39 @@ module mojo_top (
     }
   }
 
-  rom rom;
-  alu alu1;   //calling the alu module
-  decimal3 decimal_output; //module to convert 8-bit into decimal
-  decimal3 decimal_goal;
+  rom rom; //creating instance of rom module
+  alu alu1;   //creating instance of alu module
+  decimal3 decimal_output; //module to convert 8-bit binary number into decimal for OUTPUT
+  decimal3 decimal_goal;  //module to convert 8-bit binary number into decimal for GOAL
   seven_seg sevenseg_options_0;// 1st options value (from right)
   seven_seg sevenseg_options_1;// 2nd options value
   seven_seg sevenseg_options_2;// 3rd options value
   seven_seg sevenseg_options_3;// 4th options value
   seven_seg sevenseg_options_4;// 5th options value
-  seven_seg sevenseg_goal_0;// 1st goal value
+  seven_seg sevenseg_goal_0;// 1st goal value (from right)
   seven_seg sevenseg_goal_1;// 2nd goal value
   seven_seg sevenseg_goal_2;// 3rd goal value
   seven_seg sevenseg_goal_3;// 4th goal value
   seven_seg sevenseg_input; // input value
-  seven_seg sevenseg_output_0; // 1st output value digit
+  seven_seg sevenseg_output_0; // 1st output value digit (from right)
   seven_seg sevenseg_output_1; // 2nd output value digit
   seven_seg sevenseg_output_2; // 3rd output value digit
   seven_seg sevenseg_output_3; // 4th output value digit
-  const PASS= b10111010010101011101;
-  const FAIL= b11001010000111111101;
-  const LSEL= b11110101111011111101;
-  const OUTPUT0 = b11111111;
+  const PASS= b11011011101001010101; //displays PASS for OPTIONS
+  const FAIL= b11011100101000011111; //displays FAIL for OPTIONS
+  const LSEL= b11110101111011111101; //displays LSEL for OPTIONS
+  const OUTPUT0 = b11111111; //displays a blank for INPUT
   
   
   always {
     reset_cond.in = ~rst_n;    // input raw inverted reset signal
     rst = reset_cond.out;      // conditioned reset
-    
-    //led = 8x{8h0}; // turn off leds
+ 
     spi_miso = bz;             // not using SPI
     spi_channel = bzzzz;       // not using flags
     avr_rx = bz;               // not using serial port    
 
-    led_seg_input_power = 1;
+    //connecting the buttons to the button conditioner and edge detector 
     button_cond_restart.in = button_restart;
     edge_detector_restart.in = button_cond_restart.out;
     button_cond_operator0.in = button_operator[0];
@@ -127,8 +126,8 @@ module mojo_top (
     button_cond_number4.in = button_number[4];
     edge_detector_number4.in = button_cond_number4.out;    
     
-    
-    rom.address = 0;
+    //defining initial values
+    rom.address = 0; 
     alu1.alufn = 0;
     alu1.a = 0;
     alu1.b = 0;
@@ -136,38 +135,40 @@ module mojo_top (
     
     //STATEMACHINE FOR TEST CASES
     case (state.q) {
-      state.IDLE: //normal function   
+      state.IDLE: //Start state 
+      //all LEDs are blank
       level.d = 0;
       rom.address = 0;
-      options.d = b11011101110111011101;
+      options.d = b11011101110111011101; 
       options_temp.d = b11011101110111011101;
       goal.d=OUTPUT0;
       number_input.d = b1101;
       number_output.d = OUTPUT0;
-        if (edge_detector_restart.out){ // restart button to start
-          state.d = state.LEVELSELECT; //select level
+        if (edge_detector_restart.out){ // press start/restart button to start
+          state.d = state.LEVELSELECT; //next state: level select
           options_temp.d = LSEL;
                   }
         
       state.LEVELSELECT:
+      //ALL leds display 0
       level.d = 0;
       rom.address = 0;
       options.d = rom.options;
       goal.d=rom.goal;              
       number_input.d = 0;
       number_output.d = 0;
-      if (edge_detector_number4.out){
+      if (edge_detector_number4.out){ //pressing button 1 loads easy stage
         level.d=1;
         state.d=state.LOAD;}
-      else if(edge_detector_number3.out){
+      else if(edge_detector_number3.out){ //pressing button 2 loads medium stage
         level.d=4;
           state.d=state.LOAD;}
-       else if (edge_detector_number2.out){
+       else if (edge_detector_number2.out){ //pressing button 3 loads hard stage
         level.d=7;
           state.d=state.LOAD;}
         
         
-      state.LOAD:
+      state.LOAD: //load state that gets ROM outputs based on level and updates dff values to be displayed in LEVEL state
       rom.address = level.q;
       options.d = rom.options;
       options_temp.d=rom.options;
@@ -177,117 +178,116 @@ module mojo_top (
       state.d=state.LEVEL1;
       
      
-      state.LEVEL1: 
-      if (edge_detector_number0.out && options_temp.q[3:0]!= b1101){
-        options_temp.d[19:0] = options.q;
-        number_input.d = options_temp.q[3:0];
-        options_temp.d[3:0] = b1101;
+      state.LEVEL1: //LEVEL STATE 
+      if (edge_detector_number0.out && options_temp.q[3:0]!= b1101){ //button 5 selects OPTION 5 and displays into INPUT
+        options_temp.d[19:0] = options.q; 
+        number_input.d = options_temp.q[3:0]; //INPUT displays OPTION 5
+        options_temp.d[3:0] = b1101; //OPTION 5 displays a blank
         }
-      else if (edge_detector_number1.out &&options_temp.q[7:4]!= b1101){
+      else if (edge_detector_number1.out &&options_temp.q[7:4]!= b1101){ //button 4 selects OPTION 4 and displays into INPUT
         options_temp.d[19:0] = options.q;
-        number_input.d = options_temp.q[7:4];
-        options_temp.d[7:4]=b1101;   
+        number_input.d = options_temp.q[7:4]; //INPUT displays OPTION 4
+        options_temp.d[7:4]=b1101; //OPTION 4 displays a blank
         }
 
-      else if (edge_detector_number2.out && options_temp.q[11:8]!= b1101){
+      else if (edge_detector_number2.out && options_temp.q[11:8]!= b1101){//button 3 selects OPTION 3 and displays into INPUT
         options_temp.d[19:0] = options.q;
-        number_input.d = options_temp.q[11:8];          
-        options_temp.d[11:8]=b1101;  }
+        number_input.d = options_temp.q[11:8]; //INPUT displays OPTION 3      
+        options_temp.d[11:8]=b1101;  } //OPTION 3 displays a blank
 
-      else if (edge_detector_number3.out &&options_temp.q[15:12]!= b1101){
+      else if (edge_detector_number3.out &&options_temp.q[15:12]!= b1101){//button 2 selects OPTION 2 and displays into INPUT
         options_temp.d[19:0] = options.q;
-        number_input.d = options_temp.q[15:12];          
-        options_temp.d[15:12]=b1101;  }
+        number_input.d = options_temp.q[15:12];//INPUT displays OPTION 2   
+        options_temp.d[15:12]=b1101;  }//OPTION 2 displays a blank
         
-      else if (edge_detector_number4.out &&options_temp.q[19:16]!= b1101){
+      else if (edge_detector_number4.out &&options_temp.q[19:16]!= b1101){//button 1 selects OPTION 1 and displays into INPUT
         options_temp.d[19:0] = options.q;    
-        number_input.d = options_temp.q[19:16];             
-        options_temp.d[19:16]=b1101;  }
+        number_input.d = options_temp.q[19:16]; //INPUT displays OPTION   
+        options_temp.d[19:16]=b1101;  } //OPTION 1 displays a blank
       
-      else if (edge_detector_operator4.out && number_input.q!= 0){ // ADD
-        alu1.alufn = 6b0;
-        alu1.a = number_input.q;
-        alu1.b = number_output.q;
-        number_output.d = alu1.alu;
-        number_input.d = 0;
-        options.d = options_temp.q;
+      else if (edge_detector_operator4.out && number_input.q!= 0){ // ADD button (only works there is a value from OPTIONS in INPUT)
+        alu1.alufn = 6b0; //alu function for add
+        alu1.a = number_input.q; //INPUT input as A into alu
+        alu1.b = number_output.q; //OUTPUT input as B into alu
+        number_output.d = alu1.alu; //OUTPUT displays new result of alu
+        number_input.d = 0; //resets INPUT back to 0
+        options.d = options_temp.q; //updates OPTIONS to reflect remaining options
         options_temp.d=options_temp.q;
           }
         
       else if (edge_detector_operator3.out && number_input.q!= 0 && number_input.q >= number_output.q){ // SUB (A-B/left-right/input-output)
-        alu1.alufn = 6b1;
-        alu1.a = number_input.q;
-        alu1.b = number_output.q;
-        number_output.d = alu1.alu;
-        number_input.d = 0;
-        options.d = options_temp.q;
+        alu1.alufn = 6b1; //alu function for subtract
+        alu1.a = number_input.q;//INPUT input as A into alu
+        alu1.b = number_output.q;//OUTPUT input as B into alu
+        number_output.d = alu1.alu;//OUTPUT displays new result of alu
+        number_input.d = 0;//resets INPUT back to 0
+        options.d = options_temp.q; //updates OPTIONS to reflect remaining options
         options_temp.d=options_temp.q;
           }  
       else if (edge_detector_operator2.out && number_input.q!= 0 && number_output.q >= number_input.q){ // SUB (B-A/right-left/output-input)
-        alu1.alufn = 6b1;
-        alu1.a = number_output.q;
-        alu1.b = number_input.q;
-        number_output.d = alu1.alu;
-        number_input.d = 0;
-        options.d = options_temp.q;
+        alu1.alufn = 6b1; //alu function for subtract
+        alu1.a = number_output.q; //OUTPUT input as A into alu
+        alu1.b = number_input.q; //INPUT input as B into alu
+        number_output.d = alu1.alu;//OUTPUT displays new result of alu
+        number_input.d = 0;//resets INPUT back to 0
+        options.d = options_temp.q;//updates OPTIONS to reflect remaining options
         options_temp.d=options_temp.q;
           }      
         
-      else if (edge_detector_operator1.out && number_input.q!= 0){ // MUL
-        alu1.alufn = 6b10;
-        alu1.a = number_input.q;
-        alu1.b = number_output.q;
-        number_output.d = alu1.alu;
-        number_input.d = 0;
-        options.d = options_temp.q;
+      else if (edge_detector_operator1.out && number_input.q!= 0){ // MUL function (A*B)
+        alu1.alufn = 6b10; //alu function for multiply
+        alu1.a = number_input.q;//INPUT input as A into alu
+        alu1.b = number_output.q;//OUTPUT input as B into alu
+        number_output.d = alu1.alu; //OUTPUT displays new result of alu
+        number_input.d = 0; //resets INPUT back to 0
+        options.d = options_temp.q;//updates OPTIONS to reflect remaining options
         options_temp.d=options_temp.q;
           }
-       else if (edge_detector_operator0.out && number_input.q!= 0 && level.q >=7 ){ //  XOR
-        alu1.alufn = 6b10110;
-        alu1.a = number_input.q;
-        alu1.b = number_output.q;
-        number_output.d = alu1.alu;
-        number_input.d = 0;
-        options.d = options_temp.q;
+       else if (edge_detector_operator0.out && number_input.q!= 0 && level.q >=7 ){ //  XOR function (A XOR B)
+        alu1.alufn = 6b10110;//alu function for XOR
+        alu1.a = number_input.q;//INPUT input as A into alu
+        alu1.b = number_output.q;//OUTPUT input as B into alu
+        number_output.d = alu1.alu;//OUTPUT dispalys new result of alu
+        number_input.d = 0;//resets INPUT back to 0
+        options.d = options_temp.q;//updates OPTIONS to reflect remaining options
         options_temp.d=options_temp.q;
         }
-       else if (edge_detector_restart.out){ //  RESTART
-        number_output.d = 0;
-        number_input.d = 0;
-        options.d = options_temp.q;
+       else if (edge_detector_restart.out){ //  START/RESTART button resets current level
+        number_output.d = 0; //sets output to 0
+        number_input.d = 0; //sets input to 0
+        options.d = options_temp.q; //resets options back to original options
         options_temp.d=options_temp.q;
-        state.d=state.LOAD;
+        state.d=state.LOAD; //state : load state
     }
-       else if (options.q == b11011101110111011101 &&number_output.q == goal.q){
-        state.d=state.WIN;}
-       else if (options.q == b11011101110111011101 && number_output.q != goal.q){
-        state.d=state.LOSE;}
+       else if (options.q == b11011101110111011101 &&number_output.q == goal.q){ //if OPTIONS is blank (all options are used up) and OUTPUT == GOAL
+        state.d=state.WIN;} //player WINS
+       else if (options.q == b11011101110111011101 && number_output.q != goal.q){ //if OPTIONS is blank and OUTPUT!=GOAL
+        state.d=state.LOSE;} //player LOSES
         
-       state.WIN:
-          options_temp.d=PASS;
-          if (edge_detector_restart.out){
+       state.WIN://WIN state
+          options_temp.d=PASS;//OPTIONS displays PASS
+          if (edge_detector_restart.out){ //pressing the start/restart button will..
           if (level.q ==6 || level.q == 3 || level.q ==9){
-            state.d=state.IDLE;
+            state.d=state.LEVELSELECT;// return back to LEVELSELECT STATE if end of level
             }
-          else {level.d=level.q+1;
+          else {level.d=level.q+1;//or move on to next stage in current level
           state.d=state.LOAD;}}
           
-       state.LOSE:     
-          options_temp.d=FAIL;
-          if (edge_detector_restart.out){
+       state.LOSE:     //lose state
+          options_temp.d=FAIL;//OPTIONS displays FAIL
+          if (edge_detector_restart.out){//pressing start/restart button will reload the current stage
           state.d=state.LOAD;}
           
           
           
           
     } 
-      
+      //connecting sevensegment module to values to be displayed
       sevenseg_options_0.char = options_temp.q[3:0];
       sevenseg_options_1.char = options_temp.q[7:4];
       sevenseg_options_2.char = options_temp.q[11:8];
       sevenseg_options_3.char = options_temp.q[15:12];
       sevenseg_options_4.char = options_temp.q[19:16];
-
       sevenseg_input.char = number_input.q;
       decimal_output.a = number_output.q;
       sevenseg_output_0.char = decimal_output.out0;
@@ -300,7 +300,7 @@ module mojo_top (
       sevenseg_goal_2.char = decimal_goal.out2;
       sevenseg_goal_3.char = decimal_goal.out3;
     
-
+        //counter to light up 4x7 segment leds
         case(ctr.value){
       0:
         led_seg_options =sevenseg_options_1.segs; 
@@ -338,6 +338,7 @@ module mojo_top (
         led_seg_output=7b0; 
         led_sel_output= ~4b0;  
   }
+    //light up 1 x 7 segment leds
         led_seg_options1=~sevenseg_options_0.segs;
         led_seg_input=~sevenseg_input.segs;
 

@@ -24,7 +24,6 @@ module mojo_top_0 (
     output reg [7:0] led_seg_output,
     output reg [3:0] led_sel_output,
     output reg [7:0] led_seg_input,
-    output reg led_seg_input_power,
     input [4:0] button_operator,
     input [4:0] button_number,
     input button_restart
@@ -367,9 +366,9 @@ module mojo_top_0 (
     .segs(M_sevenseg_output_3_segs)
   );
   
-  localparam PASS = 20'hba55d;
+  localparam PASS = 20'hdba55;
   
-  localparam FAIL = 20'hca1fd;
+  localparam FAIL = 20'hdca1f;
   
   localparam LSEL = 20'hf5efd;
   
@@ -389,7 +388,6 @@ module mojo_top_0 (
     spi_miso = 1'bz;
     spi_channel = 4'bzzzz;
     avr_rx = 1'bz;
-    led_seg_input_power = 1'h1;
     M_button_cond_restart_in = button_restart;
     M_edge_detector_restart_in = M_button_cond_restart_out;
     M_button_cond_operator0_in = button_operator[0+0-:1];
@@ -560,7 +558,7 @@ module mojo_top_0 (
         end
       end
       WIN_state: begin
-        M_options_temp_d = 20'hba55d;
+        M_options_temp_d = 20'hdba55;
         if (M_edge_detector_restart_out) begin
           if (M_level_q == 3'h6 || M_level_q == 2'h3 || M_level_q == 4'h9) begin
             M_state_d = IDLE_state;
@@ -571,7 +569,7 @@ module mojo_top_0 (
         end
       end
       LOSE_state: begin
-        M_options_temp_d = 20'hca1fd;
+        M_options_temp_d = 20'hdca1f;
         if (M_edge_detector_restart_out) begin
           M_state_d = LOAD_state;
         end
