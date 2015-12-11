@@ -56,7 +56,7 @@ module mojo_top (
 
     .rst(rst) {
     dff goal[8]; //goal
-    dff level[3]; //level
+    dff level[4]; //level
     dff options_temp[20]; //temp options
     dff options[20]; //options
     dff number_input[4]; //input
@@ -88,8 +88,10 @@ module mojo_top (
   seven_seg sevenseg_output_1; // 2nd output value digit
   seven_seg sevenseg_output_2; // 3rd output value digit
   seven_seg sevenseg_output_3; // 4th output value digit
-  const PASS= b11011011101001010101; //displays PASS for OPTIONS
-  const FAIL= b11011100101000011111; //displays FAIL for OPTIONS
+  const PASS = b11011011101001010101;
+  const FAIL = b11011100101000011111;
+  //const PASS= b10111010010101011101; //displays PASS for OPTIONS
+  //const FAIL= b11001010000111111101; //displays FAIL for OPTIONS
   const LSEL= b11110101111011111101; //displays LSEL for OPTIONS
   const OUTPUT0 = b11111111; //displays a blank for INPUT
   
@@ -234,7 +236,7 @@ module mojo_top (
         options_temp.d=options_temp.q;
           }      
         
-      else if (edge_detector_operator1.out && number_input.q!= 0){ // MUL function (A*B)
+      else if (edge_detector_operator1.out && number_input.q!= 0 && number_output.q!=0){ // MUL function (A*B)
         alu1.alufn = 6b10; //alu function for multiply
         alu1.a = number_input.q;//INPUT input as A into alu
         alu1.b = number_output.q;//OUTPUT input as B into alu
@@ -243,7 +245,7 @@ module mojo_top (
         options.d = options_temp.q;//updates OPTIONS to reflect remaining options
         options_temp.d=options_temp.q;
           }
-       else if (edge_detector_operator0.out && number_input.q!= 0 && level.q >=7 ){ //  XOR function (A XOR B)
+       else if (edge_detector_operator0.out && number_input.q!= 0 && level.q >=7 &&number_output.q!=0){ //  XOR function (A XOR B)
         alu1.alufn = 6b10110;//alu function for XOR
         alu1.a = number_input.q;//INPUT input as A into alu
         alu1.b = number_output.q;//OUTPUT input as B into alu
@@ -268,6 +270,7 @@ module mojo_top (
           options_temp.d=PASS;//OPTIONS displays PASS
           if (edge_detector_restart.out){ //pressing the start/restart button will..
           if (level.q ==6 || level.q == 3 || level.q ==9){
+            options_temp.d = LSEL;
             state.d=state.LEVELSELECT;// return back to LEVELSELECT STATE if end of level
             }
           else {level.d=level.q+1;//or move on to next stage in current level
@@ -277,9 +280,6 @@ module mojo_top (
           options_temp.d=FAIL;//OPTIONS displays FAIL
           if (edge_detector_restart.out){//pressing start/restart button will reload the current stage
           state.d=state.LOAD;}
-          
-          
-          
           
     } 
       //connecting sevensegment module to values to be displayed

@@ -42,7 +42,7 @@ NET "led_sel_options[1]" LOC = P102;
 NET "led_sel_options[1]" IOSTANDARD = LVTTL;
 NET "led_sel_options[2]" LOC = P100;
 NET "led_sel_options[2]" IOSTANDARD = LVTTL;
-NET "led_sel_options[3]" LOC = P119;
+NET "led_sel_options[3]" LOC = P121;
 NET "led_sel_options[3]" IOSTANDARD = LVTTL;
 
 NET "led_seg_options1[0]" LOC = P127;
@@ -98,7 +98,7 @@ NET "led_seg_output[4]" LOC = P139;
 NET "led_seg_output[4]" IOSTANDARD = LVTTL;
 NET "led_seg_output[5]" LOC = P138;
 NET "led_seg_output[5]" IOSTANDARD = LVTTL;
-NET "led_seg_output[6]" LOC = P137;
+NET "led_seg_output[6]" LOC = P5;
 NET "led_seg_output[6]" IOSTANDARD = LVTTL;
 NET "led_seg_output[7]" IOSTANDARD = LVTTL;
 
@@ -106,9 +106,9 @@ NET "led_sel_output[0]" LOC = P144;
 NET "led_sel_output[0]" IOSTANDARD = LVTTL;
 NET "led_sel_output[1]" LOC = P1;
 NET "led_sel_output[1]" IOSTANDARD = LVTTL;
-NET "led_sel_output[2]" LOC = P2;
+NET "led_sel_output[2]" LOC = P137;
 NET "led_sel_output[2]" IOSTANDARD = LVTTL;
-NET "led_sel_output[3]" LOC = P5;
+NET "led_sel_output[3]" LOC = P2;
 NET "led_sel_output[3]" IOSTANDARD = LVTTL;
 
 NET "led_seg_input[0]" LOC = P85;
